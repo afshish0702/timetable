@@ -130,7 +130,7 @@ document.getElementById("saveModal").style.display = "none";
 ============================= */
 function saveClasses(){
 
-fetch("http://localhost:5000/api/classes",{
+fetch("https://timetable-1j8i.onrender.comapi/classes",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -155,7 +155,7 @@ async function loadClasses(){
 
 try{
 
-let res = await fetch("http://localhost:5000/api/classes");
+let res = await fetch("https://timetable-1j8i.onrender.com/api/classes");
 let data = await res.json();
 
 if(data && data.length){

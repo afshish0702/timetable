@@ -12,7 +12,7 @@ let waAllData = [];     // DB saved data (Summary ke liye)
 async function loadAllotedData() {
     try {
 
-        const res = await fetch("http://localhost:5000/api/workallot");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/workallot");
         const allData = await res.json();
 
         waAllData = [];              // 🔥 DB data
@@ -63,7 +63,7 @@ async function saveWorkAllotment() {
     }
 
     // ✅ Save to backend
-    await fetch("http://localhost:5000/api/workallot", {
+    await fetch("https://timetable-1j8i.onrender.com/api/workallot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,7 +137,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function loadTeachers() {
 
     const res =
-        await fetch("http://localhost:5000/api/teachers")
+        await fetch("https://timetable-1j8i.onrender.com/api/teachers")
 
     waTeachers = await res.json()
 
@@ -229,7 +229,7 @@ function selectTeacher(t) {
 
 async function loadClasses() {
     try {
-        const res = await fetch("http://localhost:5000/api/classes")
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/classes")
         waClasses = await res.json()
 
         const clsDropdown = document.getElementById("waClass")
@@ -255,7 +255,7 @@ async function loadClasses() {
 async function loadSubjects() {
 
     const res =
-        await fetch("http://localhost:5000/api/subjects")
+        await fetch("https://timetable-1j8i.onrender.com/api/subjects")
 
     waSubjects = await res.json()
 
@@ -457,7 +457,7 @@ async function saveWorkAllotment() {
         return;
     }
 
-    await fetch("http://localhost:5000/api/workallot", {
+    await fetch("https://timetable-1j8i.onrender.com/api/workallot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -626,7 +626,7 @@ async function saveWorkAllotment() {
         return
     }
 
-    await fetch("http://localhost:5000/api/workallot", {
+    await fetch("https://timetable-1j8i.onrender.com/api/workallot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -761,7 +761,7 @@ async function tsDelete(name) {
     btn.onclick = async () => {
 
         await fetch(
-            "http://localhost:5000/api/workallot/" +
+            "https://timetable-1j8i.onrender.com/api/workallot/" +
             encodeURIComponent(name),
             { method: "DELETE" }
         )

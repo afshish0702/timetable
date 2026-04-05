@@ -2,7 +2,7 @@
 let filtersInitialized = false;
 async function loadTimetable() {
     try {
-        const res = await fetch("http://localhost:5000/api/timetable");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/timetable");
         const data = await res.json();
 
         const type = document.querySelector('input[name="viewType"]:checked').value;

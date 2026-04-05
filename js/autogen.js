@@ -182,7 +182,7 @@ function renderGeneratedTimetable() {
 // index.js or timetable.js (frontend)
 window.saveTimetable = async () => {
     try {
-        const res = await fetch("http://localhost:5000/api/final", {
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/final", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

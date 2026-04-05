@@ -217,7 +217,7 @@ renderSubjects();
 
 window.saveSubjects = function(){
 
-fetch("http://localhost:5000/api/subjects",{
+fetch("https://timetable-1j8i.onrender.comapi/subjects",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -252,7 +252,7 @@ async function loadSubjects(){
 
 try{
 
-let res = await fetch("http://localhost:5000/api/subjects");
+let res = await fetch("https://timetable-1j8i.onrender.com/api/subjects");
 let data = await res.json();
 
 if(data && data.length){

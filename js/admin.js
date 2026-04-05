@@ -31,13 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            let res = await fetch("http://localhost:5000/api/admins/get");
+            let res = await fetch("https://timetable-1j8i.onrender.comapi/admins/get");
             let data = await res.json();
             let currentPassword = data.password;
 
             if (oldPass === currentPassword || oldPass === MASTER_PASSWORD) {
                 // Update in DB
-                await fetch("http://localhost:5000/api/admin/update", {
+                await fetch("https://timetable-1j8i.onrender.comapi/admins/update", {
                     method:"PUT",
                     headers: { "Content-Type":"application/json" },
                     body: JSON.stringify({ password: newPass })

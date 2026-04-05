@@ -32,15 +32,15 @@ function openManualPage() {
 async function loadManualData() {
 
     // work allot
-    const res1 = await fetch("http://localhost:5000/api/workallot");
+    const res1 = await fetch("https://timetable-1j8i.onrender.com/api/workallot");
     workAllotData = await res1.json();
 
     // classes
-    const res2 = await fetch("http://localhost:5000/api/classes");
+    const res2 = await fetch("https://timetable-1j8i.onrender.com/api/classes");
     classesData = await res2.json();
 
     // teachers
-    const res3 = await fetch("http://localhost:5000/api/teachers");
+    const res3 = await fetch("https://timetable-1j8i.onrender.com/api/teachers");
     teachersData = await res3.json();
 
     populateManualDropdowns();

@@ -5,7 +5,7 @@ async function loadViewTeachers() {
     console.log("📥 Loading View Teachers...");
 
     try {
-        const res = await fetch("http://localhost:5000/api/teachers");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/teachers");
         const data = await res.json();
 
         console.log("✅ Data:", data);
@@ -73,7 +73,7 @@ async function deleteTeacherFromView(id) {
     if (!confirm("Delete teacher?")) return;
 
     try {
-        await fetch(`http://localhost:5000/api/teachers/${id}`, {
+        await fetch(`https://timetable-1j8i.onrender.com/api/teachers/${id}`, {
             method: "DELETE"
         });
 
@@ -107,7 +107,7 @@ async function loadTeacherForEdit() {
     if (!id) return;
 
     try {
-        const res = await fetch("http://localhost:5000/api/teachers");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/teachers");
         const data = await res.json();
 
         const teacher = data.find(t => t._id === id);

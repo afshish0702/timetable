@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     teacherSelect.innerHTML = `<option value="">Select Absent Teacher</option>`;
 
     try {
-        const res = await fetch("http://localhost:5000/api/teachers"); // DB API
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/teachers"); // DB API
         const teachers = await res.json(); // [{name, short, classes: [], subjects: []}]
         window.allTeachers = teachers;
 

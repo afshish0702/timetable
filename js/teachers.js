@@ -17,12 +17,12 @@ async function populateClassesSubjects() {
     let subjectsData = [];
 
     try {
-        const res = await fetch("http://localhost:5000/api/classes");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/classes");
         classesData = await res.json();
     } catch {}
 
     try {
-        const res = await fetch("http://localhost:5000/api/subjects");
+        const res = await fetch("https://timetable-1j8i.onrender.com/api/subjects");
         subjectsData = await res.json();
     } catch {}
 
@@ -90,7 +90,7 @@ async function addTeacher() {
 
         // 🔥 UPDATE MODE
         if (editTeacherId) {
-            await fetch(`http://localhost:5000/api/teachers/${editTeacherId}`, {
+            await fetch(`https://timetable-1j8i.onrender.com/api/teachers/${editTeacherId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(teacherData)
@@ -101,7 +101,7 @@ async function addTeacher() {
 
         } else {
             // 🔥 ADD MODE
-            await fetch("http://localhost:5000/api/teachers", {
+            await fetch("https://timetable-1j8i.onrender.com/api/teachers", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(teacherData)
