@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Manage school timetable, assign substitute teachers, and track classes efficiently.">
+    <title>School Timetable Management</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f393.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <!-- jQuery (required by DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Basic modal and form styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-row {
+            margin: 10px 0;
+        }
+
+        .class-box,
+        .subject-box {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-box button,
+        .class-box button {
+            margin-left: 5px;
+        }
+
+        .primary-btn,
+        .save-btn {
+            margin-top: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <div class="logo">St. Jude's School</div>
+
+        <button class="menu-item active" onclick="showPage('dashboard',this)">
+            Dashboard
+        </button>
+
+        <div class="menu-title" onclick="toggleMenu(this)">
+            MASTER DATA
+        </div>
+
+        <div class="submenu">
+            <button onclick="showPage('classes',this)">Classes</button>
+            <button onclick="showPage('subjects',this)">Subjects</button>
+            <button onclick="showPage('teachers',this)">Teachers</button>
+            <button onclick="showPage('viewTeachers',this)">View Teachers</button>
+            <button onclick="showPage('sections',this)">Work Allotment</button>
+        </div>
+
+        <div class="menu-title" onclick="toggleMenu(this)">
+            TIMETABLE
+        </div>
+
+        <div class="submenu">
+            <button onclick="showPage('generate',this)">Auto-Generate</button>
+            <button onclick="showPage('manual-generate',this)">Manual Generate</button>
+            <button onclick="showPage('substitute',this)">Substitute Teacher</button>
+            <button onclick="showPage('view',this)">View</button>
+        </div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="topbar">
+            <div>Timetable Management System</div>
+            <div class="top-right">
+                Admin ▾
+            </div>
+
+            <!-- Change Password Modal -->
+            <div id="adminPasswordModal" class="modal-center" style="display:none;">
+                <div class="modal-box">
+                    <h3>Change Password</h3>
+                    <form id="changePasswordForm" style="display:flex; flex-direction:column; gap:10px;">
+                        <input type="password" id="oldPassword" placeholder="Old Password" required>
+                        <input type="password" id="newPassword" placeholder="New Password" required>
+                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                        <button type="button" id="updatePasswordBtn">Update Password</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="page-container">
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="page active">
+                <div class="cards">
+                    <div class="card blue">Class Wise Timetable</div>
+                    <div class="card green">Teacher Wise Timetable</div>
+                    <div class="card yellow">Total Subjects</div>
+                    <div class="card red">Total Teachers</div>
+                </div>
+            </div>
+
+            <!-- Classes Section -->
+            <div id="classes" class="page">
+                <h2>Classes Setup</h2>
+                <div class="class-setup">
+                    <div class="form-row">
+                        <label>Number of Classes</label>
+                        <input type="number" id="classCount" placeholder="Ex: 12">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Section Format</label>
+                        <div class="radio-modern">
+                            <label>
+                                <input type="radio" name="sectionType" value="alpha" checked>
+                                <span>A, B, C</span>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="sectionType" value="numeric">
+                                <span>A1, A2</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="primary-btn" onclick="generateClasses()">Generate Classes</button>
+                </div>
+
+                <div id="classList" class="class-list"></div>
+                <button class="save-btn" onclick="saveClasses()">Final Save</button>
+            </div>
+
+            <!-- Subjects Section -->
+            <div id="subjects" class="page">
+                <h2>Subjects Setup</h2>
+
+                <!-- Subject Form -->
+                <div class="subject-form" style="max-width:400px; margin-bottom:20px;">
+                    <div class="form-row">
+                        <label>Subject Name</label><br>
+                        <input type="text" id="subjectName" placeholder="Ex: Mathematics">
+                    </div>
+                    <div class="form-row">
+                        <label>Short Name</label><br>
+                        <input type="text" id="subjectShort" placeholder="Ex: MATH">
+                    </div>
+                    <div class="form-row">
+                        <label>Background Color (Optional)</label><br>
+                        <div id="formColorPalette" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;"></div>
+                        <input type="color" id="formCustomColor" value="#ffffff" style="margin-top:5px;">
+                    </div>
+                    <button class="primary-btn" onclick="addSubject()">Add Subject</button>
+                </div>
+
+                <!-- DataTable -->
+                <table id="subjectsTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>S. No.</th>
+                            <th>Subject Name</th>
+                            <th>Short Name</th>
+                            <th>Color</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <button class="save-btn" onclick="saveSubjects()" style="margin-top:15px;">Final Save</button>
+            </div>
+
+            <!-- Edit Modal -->
+            <div id="subjectEditModal" class="modal">
+                <div class="modal-box">
+                    <h3>Edit Subject</h3>
+                    <div class="form-row">
+                        <label>Subject Name</label><br>
+                        <input type="text" id="editSubjectName">
+                    </div>
+                    <div class="form-row">
+                        <label>Short Name</label><br>
+                        <input type="text" id="editSubjectShort">
+                    </div>
+                    <div class="form-row">
+                        <label>Background Color (Optional)</label><br>
+                        <div id="modalColorPalette" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">
+                        </div>
+                        <input type="color" id="modalCustomColor" value="#ffffff" style="margin-top:5px;">
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="applySubjectEdit()">Apply</button>
+                        <button onclick="closeSubjectModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Modal -->
+            <div id="saveModal" class="modal">
+                <div class="modal-box">
+                    <h3>Save Successful</h3>
+                    <p>Your changes have been saved.</p>
+                    <div class="modal-actions">
+                        <button onclick="closeSaveModal()">OK</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Teachers Section  -->
+            <div id="teachers" class="page">
+                <h2>Teachers Setup</h2>
+
+                <div class="teacher-container" style="display:flex; gap:30px; flex-wrap:wrap;">
+
+                    <!-- Left Column: Personal Info -->
+                    <div style="flex:1; min-width:300px; border:1px solid #ccc; padding:15px; border-radius:10px;">
+                        <div style="text-align:center; margin-bottom:15px;">
+                            <img id="teacherProfilePreview" src=""
+                                style="width:100px; height:100px; border-radius:50%; border:2px solid #333; object-fit:cover;">
+                        </div>
+                        <div class="form-row">
+                            <label>Name *</label><br>
+                            <input type="text" id="teacherName" placeholder="John Doe">
+                        </div>
+                        <div class="form-row">
+                            <label>Short Name *</label><br>
+                            <input type="text" id="teacherShort" placeholder="JD">
+                        </div>
+                        <div class="form-row">
+                            <label>Mobile</label><br>
+                            <input type="text" id="teacherMobile" placeholder="9876543210">
+                        </div>
+                        <div class="form-row">
+                            <label>Email</label><br>
+                            <input type="email" id="teacherEmail" placeholder="john@example.com">
+                        </div>
+                        <div class="form-row">
+                            <label>Blood Group</label><br>
+                            <input type="text" id="teacherBlood" placeholder="B+">
+                        </div>
+                        <div class="form-row">
+                            <label>Profile Photo</label><br>
+                            <input type="file" id="teacherPhoto" accept="image/*">
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Class & Subject Assignment -->
+                    <div style="flex:1; min-width:300px; border:1px solid #ccc; padding:15px; border-radius:10px;">
+                        <div class="form-row">
+                            <label>Total Periods Allotted *</label><br>
+                            <input type="number" id="teacherPeriods" min="0" value="0">
+                        </div>
+
+                        <h4>Assign Classes *</h4>
+                        <div id="classesCheckboxes" class="select-all-checkbox"
+                            style="max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:5px;">
+                        </div>
+
+                        <h4>Assign Subjects *</h4>
+                        <div id="subjectsCheckboxes" class="select-all-checkbox"
+                            style="max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:5px;">
+                        </div>
+
+                        <button class="save-btn" style="margin-top:15px; width:100%;" onclick="addTeacher()">
+                            Add Teacher
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- View Teachers Section -->
+            <div id="viewTeachers" class="page">
+                <h2>View Teachers</h2>
+
+                <table id="viewTeachersTable" class="display" style="width:100%" style="justify-content: center;">
+                    <thead>
+                        <tr>
+                            <th>S. No.</th>
+                            <th>Name</th>
+                            <th>Short Name</th>
+                            <th>Classes</th>
+                            <th>Periods</th>
+                            <th>Subjects</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <!-- Edit Teacher Modal -->
+                <div id="teacherEditModal" class="modal" style="display:none;">
+                    <div class="modal-box" style="max-width:800px;">
+                        <h3>Edit Teacher</h3>
+                        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+                            <!-- Left: Personal Info -->
+                            <div style="flex:1; min-width:300px; text-align:center;">
+                                <img id="modalTeacherProfile" src=""
+                                    style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #333;margin-bottom:10px;">
+                                <input type="file" id="modalTeacherPhoto" accept="image/*"
+                                    style="margin-bottom:15px;"><br>
+                                <label>Name *</label><br>
+                                <input type="text" id="modalTeacherName" style="width:100%; margin-bottom:10px;"><br>
+                                <label>Short Name *</label><br>
+                                <input type="text" id="modalTeacherShort" style="width:100%; margin-bottom:10px;"><br>
+                                <label>Mobile</label><br>
+                                <input type="text" id="modalTeacherMobile" style="width:100%; margin-bottom:10px;"><br>
+                                <label>Email</label><br>
+                                <input type="email" id="modalTeacherEmail" style="width:100%; margin-bottom:10px;"><br>
+                                <label>Blood Group</label><br>
+                                <input type="text" id="modalTeacherBlood" style="width:100%;">
+                            </div>
+
+                            <!-- Right: Classes & Subjects -->
+                            <div style="flex:1; min-width:300px;">
+                                <h4 style="margin-top:0;">Classes *</h4>
+                                <div id="modalClassesCheckboxes"
+                                    style="max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:5px;">
+                                </div>
+
+                                <h4>Subjects *</h4>
+                                <div id="modalSubjectsCheckboxes"
+                                    style="max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:5px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions" style="text-align:right; margin-top:20px;">
+                            <button onclick="updateTeacherModal()"
+                                style="background:#28a745;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;margin-right:10px;">Update
+                                Teacher</button>
+                            <button onclick="closeTeacherModal()"
+                                style="background:#6c757d;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Work Allotment -->
+            <div id="sections" class="page">
+                <h2>Work Allotment</h2>
+
+                <!-- ================= Teacher Top ================= -->
+                <div class="wa-top-grid">
+
+                    <div class="wa-field">
+                        <label>Teacher Name *</label>
+                        <input type="text" id="waTeacherInput" placeholder="Search teacher...">
+                        <div id="teacherDropdown" class="live-search"></div>
+                    </div>
+
+                    <div class="wa-field">
+                        <label>Total No. Of Periods</label>
+                        <input type="text" id="waTotal" readonly>
+                    </div>
+
+                    <div class="wa-field">
+                        <label>Short Name</label>
+                        <input type="text" id="waShort" readonly>
+                    </div>
+
+                    <div class="wa-field">
+                        <label>Remaining Period</label>
+                        <input type="text" id="waRemaining" readonly>
+                    </div>
+
+                </div>
+
+                <!-- ================= Add Row ================= -->
+                <table class="wa-entry">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Sec</th>
+                            <th>Subject</th>
+                            <th>No. Of Period</th>
+                            <th>Add</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select id="waClass"></select>
+                            </td>
+                            <td>
+                                <select id="waSection"></select>
+                            </td>
+                            <td>
+                                <select id="waSubject"></select>
+                            </td>
+                            <td>
+                                <input type="number" id="waPeriods" min="1">
+                            </td>
+                            <td>
+                                <button class="add-btn" onclick="addAllotment()">Add</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ================= Added Rows ================= -->
+                <table id="waTable" class="display">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Sec</th>
+                            <th>Subject</th>
+                            <th>Periods</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <!-- ================= Footer ================= -->
+                <div class="wa-footer">
+                    <div class="wa-total">
+                        Total Allotted Periods :
+                        <span id="waAssigned">0</span>
+                    </div>
+
+                    <button class="save-btn" onclick="saveWorkAllotment()">
+                        Final Save
+                    </button>
+                </div>
+
+                <!-- ================= Teacher Summary Table ================= -->
+                <h3>Teacher Summary</h3>
+                <input type="text" id="tsSearch" placeholder="Search teacher...">
+                <table id="tsTable" class="display">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Teacher Name</th>
+                            <th>Short Name</th>
+                            <th>Total Period</th>
+                            <th>Assigned Period</th>
+                            <th>Remaining Period</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+
+            <!-- ================= Fancy Modal ================= -->
+            <div id="waModal" class="wa-modal">
+                <div class="wa-modal-box">
+                    <div class="wa-modal-title">
+                        Work Allotment
+                    </div>
+                    <div id="waModalText" class="wa-modal-body">
+                        Message here
+                    </div>
+                    <div class="wa-modal-actions">
+                        <button onclick="closeWAModal()">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================ Auto Generate Timetable ================================ -->
+            <div id="generate" class="page">
+
+                <div id="autoConfig">
+                    <h3>Auto Timetable Settings</h3>
+
+                    <label>Working Days</label>
+                    <select id="daysType">
+                        <option value="5">Monday - Friday</option>
+                        <option value="6">Monday - Saturday</option>
+                    </select>
+
+                    <label>Periods Per Day</label>
+                    <input type="number" id="periodsPerDay" value="6">
+
+                    <button onclick="generateAutoTimetable()">Generate</button>
+
+                    <!-- EDIT GENERATED -->
+                    <button id="editBtn" style="display:none; margin-left:10px;">
+                        Edit Generated
+                    </button>
+
+                </div>
+
+
+                <!-- CLASS + SECTION SELECT -->
+                <div id="editPanel" style="display:none; margin-top:15px;">
+
+                    <label>Select Class</label>
+                    <select id="editClass"></select>
+
+                    <label>Select Section</label>
+                    <select id="editSection"></select>
+
+                </div>
+
+
+                <!-- EDITABLE TABLE -->
+                <div id="editTable" style="margin-top:20px;"></div>
+
+
+                <!-- FINAL SAVE -->
+                <button id="finalSaveBtn" class="save-btn" style="display:none; margin-top:15px;">
+                    Save Final Timetable
+                </button>
+
+
+                <!-- ORIGINAL GENERATED VIEW -->
+                <div id="timetableContainer"></div>
+
+            </div>
+
+            <!-- ==================================MAnual Generate Timetable===============================  -->
+
+
+            <div id="manual-generate" class="page">
+
+                <div class="manual-card">
+
+                    <h2 class="manual-title">📅 Manual Timetable Generator</h2>
+
+                    <div id="manualControls" class="manual-controls">
+
+                        <div class="control-group">
+                            <label>Class</label>
+                            <select id="mClass" onchange="updateSections()"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Section</label>
+                            <select id="mSection" onchange="updateManualFilters()"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Teacher</label>
+                            <select id="mTeacher" onchange="updateSubjects()"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Subject</label>
+                            <select id="mSubject"></select>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="grid-card">
+                    <h3 id="manualHeading">Manual Timetable</h3>
+                    <div id="manualGrid"></div>
+                </div>
+                <div class="manual-actions">
+                    <button onclick="printManual()">Print</button>
+                    <button onclick="exportManual()">Export PDF</button>
+                    <button onclick="finalSaveManual()">Final Save</button>
+                </div>
+            </div>
+
+
+
+            <!-- ====================================== Substitute Teacher Page====================================== -->
+            <div id="substitute" class="page">
+                <div id="substitutePage">
+
+                    <h2 style="text-align:center;">📝 Substitute Teacher Assignment</h2>
+
+                    <div
+                        style="text-align:center; margin-bottom:15px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+
+                        <!-- Day Picker -->
+                        <div>
+                            <label for="subDaySelect">Select Day: </label>
+                            <select id="subDaySelect">
+                                <option value="">Select Day</option>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                                <option value="Saturday">Saturday</option>
+                            </select>
+                        </div>
+
+                        <!-- Absent Teacher Select -->
+                        <div>
+                            <label for="absentTeacherSelect">Absent Teacher: </label>
+                            <select id="absentTeacherSelect">
+                                <option value="">Select Absent Teacher</option>
+                            </select>
+                        </div>
+
+                        <!-- Get Teacher Button -->
+                        <div>
+                            <button onclick="getSubstituteTeacher()">👨‍🏫 Get Teacher</button>
+                        </div>
+
+                    </div>
+
+                    <!-- Container to show substitute results -->
+                    <div id="substituteResult" style="text-align:center; margin-top:20px;"></div>
+
+                </div>
+            </div>
+            <!-- ====================================== View Timetable ======================================= -->
+
+
+            <div id="view" class="page">
+                <div id="viewPage">
+
+                    <h2 style="text-align:center;">📊 Saved Timetable</h2>
+
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <button onclick="loadTimetable()">🔄 Load</button>
+                        <button onclick="printTimetable()">🖨 Print</button>
+                        <button onclick="exportPDF()">📄 Export PDF</button>
+                        <div style="text-align:center; margin-bottom:15px;">
+
+                            <label>
+                                <input type="radio" name="viewType" value="class" checked onchange="toggleFilters()">
+                                Class Wise
+                            </label>
+
+                            <label style="margin-left:15px;">
+                                <input type="radio" name="viewType" value="teacher" onchange="toggleFilters()">
+                                Teacher Wise
+                            </label>
+                            <div style="text-align:center; margin:15px 0;">
+
+                                <!-- Class + Section -->
+                                <select id="classSelect" onchange="loadTimetable()">
+                                    <option value="">Select Class</option>
+                                </select>
+
+                                <select id="sectionSelect" onchange="loadTimetable()">
+                                    <option value="">Select Section</option>
+                                </select>
+
+                                <!-- Teacher -->
+                                <select id="teacherSelect" style="display:none;" onchange="loadTimetable()">
+                                    <option value="">Select Teacher</option>
+                                </select>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="viewTimetableContainer"></div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="editModal" class="modal">
+        <div class="modal-box">
+            <h3>Edit Sections</h3>
+            <label>No. of Sections</label>
+            <input type="number" id="sectionCount">
+
+            <label>Format</label>
+            <select id="sectionFormat">
+                <option value="alpha">A, B, C</option>
+                <option value="numeric">A1, A2</option>
+            </select>
+
+            <div class="modal-actions">
+                <button onclick="applyEdit()">Apply</button>
+                <button onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="modal">
+        <div class="modal-box">
+            <h3>Save Successful</h3>
+            <p>Your changes have been saved.</p>
+            <div class="modal-actions">
+                <button onclick="closeSaveModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+
+    <script src="js/script.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/classes.js"></script>
+    <script src="js/subjects.js"></script>
+    <script src="js/teachers.js"></script>
+    <script src="js/viewTeachers.js"></script>
+    <script src="js/workAllot.js"></script>
+    <script src="js/autogen.js"></script>
+    <script src="js/manual.js"></script>
+    <script src="js/substitute.js"></script>
+    <script src="js/view.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // 1️⃣ Class Wise Timetable
+            document.querySelector(".card.blue").addEventListener("click", () => {
+                showPage("view", document.querySelector(".card.blue"));
+                // Set radio to class wise
+                const classRadio = document.querySelector('input[name="viewType"][value="class"]');
+                if (classRadio) classRadio.checked = true;
+                toggleFilters();
+                loadTimetable();
+            });
+
+            // 2️⃣ Teacher Wise Timetable
+            document.querySelector(".card.green").addEventListener("click", () => {
+                showPage("view", document.querySelector(".card.green"));
+                // Set radio to teacher wise
+                const teacherRadio = document.querySelector('input[name="viewType"][value="teacher"]');
+                if (teacherRadio) teacherRadio.checked = true;
+                toggleFilters();
+                loadTimetable();
+            });
+
+            // 3️⃣ Total Subjects
+            document.querySelector(".card.yellow").addEventListener("click", () => {
+                showPage("subjects", document.querySelector(".card.yellow"));
+            });
+
+            // 4️⃣ Total Teachers
+            document.querySelector(".card.red").addEventListener("click", () => {
+                showPage("viewTeachers", document.querySelector(".card.red"));
+            });
+
+        });
+    </script>
+<footer class="footer">
+  Developed by Aftab © 2026 • All Rights Reserved
+</footer>
+</body>
+
+</html>

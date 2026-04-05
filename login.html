@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Login</title>
+<!-- Admin Login Favicon -->
+<link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f464.svg">
+<style>
+body { font-family: Arial; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0; }
+#loginBox { background:#fff; padding:30px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:300px; }
+input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+button { width:100%; padding:10px; border:none; background:#007bff; color:#fff; border-radius:5px; cursor:pointer; }
+button:hover { background:#0056b3; }
+#message { color:red; text-align:center; }
+</style>
+</head>
+<body>
+<div id="loginBox">
+    <h2>Admin Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p id="message"></p>
+</div>
+
+<script>
+async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const message = document.getElementById('message');
+
+    if (!username || !password) {
+        message.innerText = 'Enter username and password';
+        return;
+    }
+
+    try {
+        const res = await fetch('http://localhost:5000/api/admin/login', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 200) {
+            message.style.color = 'green';
+            message.innerText = data.message;
+            setTimeout(() => window.location.href = 'index.html', 1000);
+        } else {
+            message.style.color = 'red';
+            message.innerText = data.message;
+        }
+    } catch (err) {
+        message.style.color = 'red';
+        message.innerText = 'Server error';
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>
