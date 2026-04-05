@@ -35,7 +35,7 @@ async function login() {
     }
 
     try {
-        const res = await fetch('https://timetable-1j8i.onrender.com/api/admin/login', {
+        const res = await fetch('https://timetable-1j8i.onrender.com/api/admin', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ username, password })
